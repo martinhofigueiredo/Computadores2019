@@ -16,12 +16,21 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#include <Arduino.h>
 #include <Wire.h>                //wire library for I2C
 #include <Colorduino.h>          //colorduino library
 
 #define I2C_DEVICE_ADDRESS 0x05  //I2C address for this device 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
+//=============HANDLERS======================================
+
+//get data from master - HINT: this is a ISR call!
+//HINT2: do not handle stuff here!! this will NOT work
+//collect only data here and process it in the main loop!
+void receiveEvent(int numBytes) {
+  //do nothing here
+}
 
 void setup()
 {
@@ -100,11 +109,3 @@ void loop()
 }
 
 
-//=============HANDLERS======================================
-
-//get data from master - HINT: this is a ISR call!
-//HINT2: do not handle stuff here!! this will NOT work
-//collect only data here and process it in the main loop!
-void receiveEvent(int numBytes) {
-  //do nothing here
-}

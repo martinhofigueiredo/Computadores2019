@@ -1,6 +1,6 @@
 /*
-  Colorduino - Colorduino Library for Arduino V1.1
-  Copyright (c) 2011 Sam C. Lin lincomatic@hotmail.com ALL RIGHTS RESERVED
+  Colorduino - Colorduino Library for Arduino
+  Copyright (c) 2011-2012 Sam C. Lin <lincomatic@hotmail.com>
   based on C code by zzy@iteadstudio
     Copyright (c) 2010 zzy@IteadStudio.  All right reserved.
 
@@ -34,6 +34,7 @@ void ColorduinoObject::LED_Delay(unsigned char i)
 // wbval[2]=blue
 void ColorduinoObject::SetWhiteBal(unsigned char wbval[3])
 {
+  cli();  // must not allow ISR to come in now, will screw up timing!
   LED_LAT_CLR;
   LED_SLB_CLR;
   for(unsigned char k=0;k<ColorduinoScreenHeight;k++)
@@ -53,24 +54,79 @@ void ColorduinoObject::SetWhiteBal(unsigned char wbval[3])
     }
   }
   LED_SLB_SET;
+  sei();  // safe to re-enable ISR
 }
 
+/********************************************************
+Name: ColorFill
+Function: Fill the frame with a color
+Parameter:R: the value of RED.   Range:RED 0~255
+          G: the value of GREEN. Range:RED 0~255
+          B: the value of BLUE.  Range:RED 0~255
+********************************************************/
+void ColorduinoObject::ColorFill(unsigned char R,unsigned char G,unsigned char B)
+{
+  PixelRGB *p = GetPixel(0,0);
+  for (unsigned char y=0;y<ColorduinoScreenWidth;y++) {
+    for(unsigned char x=0;x<ColorduinoScreenHeight;x++) {
+      p->r = R;
+      p->g = G;
+      p->b = B;
+      p++;
+    }
+  }
+  
+  FlipPage();
+}
 
-// global instance
-ColorduinoObject Colorduino;
+// ISR fires every 256-TCNTn ticks
+// if TCNTn = 100, ISR fires every 156 ticks
+// prescaler = 128 so ISR fires every 16MHz / 128 = 125KHz
+// 125KHz / 156 = 801.282Hz / 8 rows = 100.16Hz refresh rate
+// if TCNTn = 61, ISR fires every 256 - 61 = 195 ticks
+// 125KHz / 195 = 641.026Hz / 8 rows = 80.128Hz refresh rate
 
+unsigned char timerCounter;
 
-ISR(TIMER2_OVF_vect)          //Timer2  Service 
-{ 
-  cli();  
-  TCNT2 = 0x64;      //flash a led matrix frequency is 100.3Hz,period is 9.97ms
-  //TCNT2 = 0x63;      //flash a led matrix frequency is 99.66Hz,period is 10.034ms   
+void ColorduinoObject::SetTimerCounter(unsigned char data)
+{
+  timerCounter = data;
+}
+
+#if defined (__AVR_ATmega32U4__)
+ISR(TIMER4_OVF_vect)          //Timer4  Service 
+{  
+  //ISR fires every 256-TCNT4 ticks
+  //so if TCNT4 = 100, ISR fires every 156 ticks
+  //prescaler = 128 so ISR fires every 16MHz / 128 = 125KHz
+  //125KHz / 156 = 801.282Hz / 8 rows = 100.16Hz refresh rate
+  //if TCNT4 = 61, ISR fires every 256 - 61 = 195 ticks
+  //125KHz / 195 = 641.026Hz / 8 rows = 80.128Hz refresh rate
+  //TCNT4 = 100;
+  TCNT4 = timerCounter;
   close_all_lines;  
   Colorduino.run();
   Colorduino.open_line(Colorduino.line);
   if (++Colorduino.line > 7) Colorduino.line = 0;
-  sei();
 }
+#else
+ISR(TIMER2_OVF_vect)          //Timer2  Service 
+{ 
+ // ISR fires every 256-TCNT2 ticks
+ // so if TCNT2 = 100, ISR fires every 156 ticks
+ // prescaler = 128 so ISR fires every 16MHz / 128 = 125KHz
+ // 125KHz / 156 = 801.282Hz / 8 rows = 100.16Hz refresh rate
+ // if TCNT2 = 61, ISR fires every 256 - 61 = 195 ticks
+ // 125KHz / 195 = 641.026Hz / 8 rows = 80.128Hz refresh rate
+  //  TCNT2 = 100;
+  TCNT2 = timerCounter;
+  close_all_lines;  
+  Colorduino.run();
+  Colorduino.open_line(Colorduino.line);
+  if (++Colorduino.line > 7) Colorduino.line = 0;
+}
+#endif
+
 /****************************************************
 the LED Hardware operate functions zone
 ****************************************************/
@@ -83,7 +139,13 @@ void ColorduinoObject::run()
 {
   LED_SLB_SET;
   LED_LAT_CLR;
+  // Inside the LED driver. Channel 23 is the last shift register so we should  
+  // start with column 7B-7G-7R... and ...1B-1G-1R last
+#if defined (REVERSE_ROWCHANNELS)
   PixelRGB *pixel = GetDrawPixel(0,line);
+#else
+  PixelRGB *pixel = GetDrawPixel(ColorduinoScreenWidth-1,line);
+#endif
   for(unsigned char x=0;x<ColorduinoScreenWidth;x++)
   {
     unsigned char temp = pixel->b;
@@ -117,9 +179,15 @@ void ColorduinoObject::run()
       LED_SCL_CLR;
       LED_SCL_SET;
     }
+#if defined (REVERSE_ROWCHANNELS)
     pixel++;
+#else
+    pixel--;
+#endif
   }
   LED_LAT_SET;
   LED_LAT_CLR;
 }
 
+// global instance
+ColorduinoObject Colorduino;

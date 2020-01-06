@@ -25,12 +25,12 @@
   License along with this library; if not, write to the Free Software
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+#include <Arduino.h>
 #include <Wire.h>
 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
-#define DEST_I2C_ADDR 5          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST_I2C_ADDR 0x05          //set destination I2C address (must match firmware in Colorduino module)
 
 #define SCREENSIZEX 8            //num of LEDs accross
 #define SCREENSIZEY 8            //num of LEDs down
@@ -57,17 +57,6 @@ typedef struct
 unsigned char plasma[SCREENSIZEX][SCREENSIZEY];
 long paletteShift;
 
- 
-void setup() 
-{
-  Wire.begin(1); // join i2c bus (address optional for master)  
-  plasma_setup();   //plasma setup
-}
-
-void loop()
-{
-   plasma_morph();
-}
 
 
 //update display buffer using x,y,r,g,b format
@@ -78,15 +67,6 @@ void display(byte x, byte y, byte r, byte g, byte b) {
   display_byte[2][p] = b;
 }
 
-
-//send display buffer to display 
-void update_display(byte addr) {   
-  BlinkM_sendBuffer(addr, 0, display_byte[0]);   
-  BlinkM_sendBuffer(addr, 1, display_byte[1]);   
-  BlinkM_sendBuffer(addr, 2, display_byte[2]);  
-}
-
-
 //send data via I2C to a client
 static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
   Wire.beginTransmission(addr);
@@ -95,6 +75,13 @@ static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
   Wire.write(disp_data, 64);
   Wire.write(END_OF_DATA);
   return Wire.endTransmission();
+}
+
+//send display buffer to display 
+void update_display(byte addr) {   
+  BlinkM_sendBuffer(addr, 0, display_byte[0]);   
+  BlinkM_sendBuffer(addr, 1, display_byte[1]);   
+  BlinkM_sendBuffer(addr, 2, display_byte[2]);  
 }
 
 
@@ -204,4 +191,15 @@ void plasma_setup()
       ) / 2;
       plasma[x][y] = bcolor;
     }
+}
+ 
+void setup() 
+{
+  Wire.begin(1); // join i2c bus (address optional for master)  
+  plasma_setup();   //plasma setup
+}
+
+void loop()
+{
+   plasma_morph();
 }
