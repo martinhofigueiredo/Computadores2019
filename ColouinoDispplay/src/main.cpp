@@ -20,7 +20,7 @@
 #include <Wire.h>                //wire library for I2C
 #include <Colorduino.h>          //colorduino library
 
-#define I2C_DEVICE_ADDRESS 0x05  //I2C address for this device 
+#define I2C_DEVICE_ADDRESS 0x11  //I2C address for this device 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
 //=============HANDLERS======================================
