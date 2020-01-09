@@ -28,11 +28,10 @@ int rtc_mes();
 //numero do ano
 int rtc_ano();
 
-/*
+
 //ler bytes do terminal (desnecessário)***
 byte leByte(); 
 // acerta hora e data (desnecessário)***
 void write_horas(byte segundos, byte minutos, byte horas, byte diaSemana, byte diaMes, byte mes, byte ano);
 //imprimir as horas (desnecessário)***
-void print_horas();
-*/
+//void print_horas();

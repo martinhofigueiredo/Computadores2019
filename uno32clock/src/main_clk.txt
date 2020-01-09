@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #include "Wire.h"
-#include "clk_temp.h"
+#include "clk_rtc.h"
 
 float temp;
 

@@ -126,7 +126,7 @@ read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
   return(ano);
 }
 
-/*
+
 //ler bytes do terminal (desnecessário)***
 byte leByte()
 {
@@ -158,6 +158,8 @@ void write_horas(byte segundos, byte minutos, byte horas, byte diaSemana, byte d
   Wire.write(decBin(ano)); // acerta ano (0 a 99)
   Wire.endTransmission();
 }
+
+/*
 //imprimir as horas (desnecessário)***
 void print_horas()
 {
