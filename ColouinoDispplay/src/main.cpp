@@ -20,7 +20,7 @@
 #include <Wire.h>                //wire library for I2C
 #include <Colorduino.h>          //colorduino library
 
-#define I2C_DEVICE_ADDRESS 0x11  //I2C address for this device 
+#define I2C_DEVICE_ADDRESS 0x64  //I2C address for this device 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
 //=============HANDLERS======================================
@@ -30,6 +30,12 @@
 //collect only data here and process it in the main loop!
 void receiveEvent(int numBytes) {
   //do nothing here
+    
+  //1 pixel = 3 bytes B00000000 B00000000 B00000000. 
+  //We send R then G then B bytes as 3 separate transfers
+  //This is because if we make the I2C buffer too large, we run out of SRAM for other things on our master Arduino
+  
+  
 }
 
 void setup()
@@ -53,12 +59,7 @@ Main Functions zone
 
 void loop()
 { 
-   
-  //1 pixel = 3 bytes B00000000 B00000000 B00000000. 
-  //We send R then G then B bytes as 3 separate transfers
-  //This is because if we make the I2C buffer too large, we run out of SRAM for other things on our master Arduino
-  
-  if (Wire.available()>66) { //when buffer full, process data. 66 =  start byte + colour + 64 pixel data + end byte
+ if (Wire.available()>66) { //when buffer full, process data. 66 =  start byte + colour + 64 pixel data + end byte
     
     // error check - make sure our data starts with the right byte   
     if (Wire.read() != START_OF_DATA) {
