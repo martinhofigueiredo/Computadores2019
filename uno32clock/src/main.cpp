@@ -2,11 +2,17 @@
 #include "clk_rtc.h"
 #include "Wire.h"
 
-void setup()
-{
-	Wire.begin();
-	Serial.begin(9600);
-}
+#define START_OF_DATA 0x10       //data markers
+#define END_OF_DATA 0x20         //data markers
+#define DEST1 0x61          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST2 0x62          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST3 0x63          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST4 0x64          //set destination I2C address (must match firmware in Colorduino module)
+#define SCREENSIZEX 8            //num of LEDs accross
+#define SCREENSIZEY 8            //num of LEDs down
+
+byte display_byte[3][64];        //display array - 64 bytes x 3 colours 
+
 
 
 //int matriz[8][32]= {{0}};
@@ -30,10 +36,40 @@ bool oito[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	1, 0, 1, 	1, 1, 1};
 bool nove[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	0, 0, 1, 	1, 1, 1};
 bool doispontos[5][3]={0, 0, 0, 	0, 1, 0, 	0, 0, 0, 	0, 1, 0, 	0, 0, 0};
 
+//setup for plasma
+typedef struct
+{
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
+} ColorRGB;
 
-int por_num(int num, int x, int y, byte r, byte g, byte b){
-	
-	
+//update display buffer using x,y,r,g,b format
+void display(byte x, byte y, byte r, byte g, byte b) {
+  byte p = (y*8)+x;   //convert from x,y to pixel number in array
+  display_byte[0][p] = r;
+  display_byte[1][p] = g;
+  display_byte[2][p] = b;
+}
+
+//send data via I2C to a client
+static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
+  Wire.beginTransmission(addr);
+  Wire.write(START_OF_DATA);
+  Wire.write(col);
+  Wire.write(disp_data, 64);
+  Wire.write(END_OF_DATA);
+  return Wire.endTransmission();
+}
+
+//send display buffer to display 
+void update_display(byte addr) {   
+  BlinkM_sendBuffer(addr, 0, display_byte[0]);   
+  BlinkM_sendBuffer(addr, 1, display_byte[1]);   
+  BlinkM_sendBuffer(addr, 2, display_byte[2]);  
+}
+
+void por_num(int num, int x, int y, byte r, byte g, byte b){
 for (i=0; i<=2; i++) //filas
 	for (j=0; j<=4; j++) //colunas
 	{
@@ -139,6 +175,11 @@ void dividir_matriz( ){
 				divido[a][b][c][3] = matriz_cor[a][24+b][c];
 }
 
+void setup()
+{
+	Wire.begin();
+	Serial.begin(9600);
+}
 
 void loop(){
 
@@ -164,4 +205,6 @@ void loop(){
 		   }
 	      Serial.println();
 	   }
+  delay(500);
+  update_display(DEST1);
 }

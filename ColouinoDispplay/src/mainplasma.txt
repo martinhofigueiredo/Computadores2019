@@ -28,8 +28,7 @@
 
 // To show off our hardware PWM LED driver (capable of displaying 16M colors), 
 // we will add gamma correction to show more accurate colors, and we will 
-// see better color transition.
-#include "gamma8.h"   
+// see better color transition.  
 
 typedef struct
 {
@@ -97,10 +96,6 @@ void HSVtoRGB(void *vRGB, void *vHSV)
   colorRGB->g = (int)(g * 255.0);
   colorRGB->b = (int)(b * 255.0);
 
-  // gamma correction
-  colorRGB->r = pgm_read_byte(&gamma8[colorRGB->r]);
-  colorRGB->g = pgm_read_byte(&gamma8[colorRGB->g]);
-  colorRGB->b = pgm_read_byte(&gamma8[colorRGB->b]);
 }
 
 float
