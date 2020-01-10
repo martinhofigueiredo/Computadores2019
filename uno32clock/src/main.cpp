@@ -11,7 +11,7 @@
 #define SCREENSIZEX 8            //num of LEDs accross
 #define SCREENSIZEY 8            //num of LEDs down
 
-byte display_byte[3][64];        //display array - 64 bytes x 3 colours 
+byte display_byte[4][3][64];        //display array - 64 bytes x 3 colours 
 
 
 
@@ -22,7 +22,6 @@ int j;
 int a;
 int b;
 int c;
-byte divido[8][8][3][4];
 
 bool zero[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 1, 1};
 bool um[5][3]= 		{0, 1, 0, 	1, 1, 0, 	0, 1, 0, 	0, 1, 0, 	1, 1, 1};
@@ -44,14 +43,6 @@ typedef struct
   unsigned char b;
 } ColorRGB;
 
-//update display buffer using x,y,r,g,b format
-void display(byte x, byte y, byte r, byte g, byte b) {
-  byte p = (y*8)+x;   //convert from x,y to pixel number in array
-  display_byte[0][p] = r;
-  display_byte[1][p] = g;
-  display_byte[2][p] = b;
-}
-
 //send data via I2C to a client
 static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
   Wire.beginTransmission(addr);
@@ -63,10 +54,10 @@ static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
 }
 
 //send display buffer to display 
-void update_display(byte addr) {   
-  BlinkM_sendBuffer(addr, 0, display_byte[0]);   
-  BlinkM_sendBuffer(addr, 1, display_byte[1]);   
-  BlinkM_sendBuffer(addr, 2, display_byte[2]);  
+void update_display(byte addr, int n) {   
+  BlinkM_sendBuffer(addr, 0, display_byte[n][0]);   
+  BlinkM_sendBuffer(addr, 1, display_byte[n][1]);   
+  BlinkM_sendBuffer(addr, 2, display_byte[n][2]);  
 }
 
 void por_num(int num, int x, int y, byte r, byte g, byte b){
@@ -157,22 +148,13 @@ void dividir_matriz( ){
 	for(a=0; a<=7; a++) //filas
 		for(b=0;b<=7;b++)//colunas
 			for(c=0;c<=2;c++) //cor
-				divido[a][b][c][0] = matriz_cor[a][b][c];
-
-	for(a=0; a<=7; a++)
-		for(b=0;b<=7;b++)
-			for(c=0;c<=2;c++)
-				divido[a][b][c][1] = matriz_cor[a][8+b][c];
-
-	for(a=0; a<=7; a++)
-		for(b=0;b<=7;b++)
-			for(c=0;c<=2;c++)
-				divido[a][b][c][2] = matriz_cor[a][16+b][c];
-
-	for(a=0; a<=7; a++)
-		for(b=0;b<=7;b++)
-			for(c=0;c<=2;c++)
-				divido[a][b][c][3] = matriz_cor[a][24+b][c];
+				{
+				byte p = (b*8) + a;
+				display_byte[0][p][c] = matriz_cor[a][b][c];
+				display_byte[1][p][c] = matriz_cor[a][8+b][c];
+				display_byte[2][p][c] = matriz_cor[a][16+b][c];
+				display_byte[3][p][c] = matriz_cor[a][24+b][c];
+				}
 }
 
 void setup()
@@ -197,14 +179,14 @@ void loop(){
     //imprimir segundos
     Serial.println(rtc_seg());
 
-		Serial.println("Matriz final:\n");
+	/*Serial.println("Matriz final:\n");
 		for(a=0; a<=7; a++) { //filas
 		   for(b=0;b<=7;b++){ //colunas
 				Serial.print(divido[a][b][0][0]);
 		   		Serial.print("	");	
 		   }
 	      Serial.println();
-	   }
-  delay(500);
-  update_display(DEST1);
+	   }*/
+	delay(1000);
+	update_display(DEST1, 0);
 }
