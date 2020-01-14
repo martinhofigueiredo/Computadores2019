@@ -72,61 +72,6 @@ float rtc_temp()
   temp = float(temp_msb) + float( temp_lsb ) / float(4);
   return temp;
 }
-
-//horas
-int rtc_horas(){
-  
-  read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-
-  return(horas);
-}
-//minutos
-int rtc_min(){
-  
-  read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-  
-  return(minutos);
-}
-//segundos
-int rtc_seg(){
-  
-  read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-  
-  return(segundos);
-}
-
-//dia da semana(dom, seg, ter, qua, qui, sex, sab)
-    //legenda: 1-domingo; 2-segunda; 3-terça; 4-quarta; 5-quinta; 6-sexta; 
-int rtc_diasem(){
-
-  read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-  return(diaSemana);
-}
-
-//numero do dia
-int rtc_diames(){
-read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-  return(diaMes);
-}
-//numero do mes
-int rtc_mes(){
-read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-  return(mes);
-}
-//numero do ano
-int rtc_ano(){
-read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes,
-  &ano);
-  return(ano);
-}
-
-
 //ler bytes do terminal (desnecessário)***
 byte leByte()
 {

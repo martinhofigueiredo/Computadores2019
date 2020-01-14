@@ -4,19 +4,18 @@
 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
-#define DEST1 0x61          //set destination I2C address (must match firmware in Colorduino module)
-#define DEST2 0x62          //set destination I2C address (must match firmware in Colorduino module)
-#define DEST3 0x63          //set destination I2C address (must match firmware in Colorduino module)
-#define DEST4 0x64          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST1 0x11          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST2 0x22          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST3 0x33          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST4 0x44          //set destination I2C address (must match firmware in Colorduino module)
 #define SCREENSIZEX 8            //num of LEDs accross
 #define SCREENSIZEY 8            //num of LEDs down
+#define SETCLOCK 0
 
-byte display_byte[4][3][64];        //display array - 64 bytes x 3 colours 
+byte display_byte[4][3][64] = {{0}};        //display array - 64 bytes x 3 colours 
+byte matriz_cor[8][32][3] = {{0}};
+byte segundos = 0, minutos = 0, horas = 0, diaSemana = 0, diaMes = 0, mes = 0, ano = 0;
 
-
-
-//int matriz[8][32]= {{0}};
-byte matriz_cor[8][32][3]= {{0}};
 int i;
 int j;
 int a;
@@ -35,14 +34,6 @@ bool oito[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	1, 0, 1, 	1, 1, 1};
 bool nove[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	0, 0, 1, 	1, 1, 1};
 bool doispontos[5][3]={0, 0, 0, 	0, 1, 0, 	0, 0, 0, 	0, 1, 0, 	0, 0, 0};
 
-//setup for plasma
-typedef struct
-{
-  unsigned char r;
-  unsigned char g;
-  unsigned char b;
-} ColorRGB;
-
 //send data via I2C to a client
 static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
   Wire.beginTransmission(addr);
@@ -57,11 +48,11 @@ static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
 void update_display(byte addr, int n) {   
   BlinkM_sendBuffer(addr, 0, display_byte[n][0]);   
   BlinkM_sendBuffer(addr, 1, display_byte[n][1]);   
-  BlinkM_sendBuffer(addr, 2, display_byte[n][2]);  
+  BlinkM_sendBuffer(addr, 2, display_byte[n][2]);
 }
 
 void por_num(int num, int x, int y, byte r, byte g, byte b){
-for (i=0; i<=2; i++) //filas
+	for (i=0; i<=2; i++) //filas
 	for (j=0; j<=4; j++) //colunas
 	{
 	switch (num){
@@ -125,7 +116,7 @@ for (i=0; i<=2; i++) //filas
 }
 
 //relógio
-int rtc_small(int horas, int min, int seg, int red, int green, int blue){
+void rtc_small(int horas, int min, int seg, int red, int green, int blue){
 
 	//Horas
 	por_num( (horas/10), 1, 1, red, green, blue);
@@ -149,44 +140,76 @@ void dividir_matriz( ){
 		for(b=0;b<=7;b++)//colunas
 			for(c=0;c<=2;c++) //cor
 				{
-				byte p = (b*8) + a;
-				display_byte[0][p][c] = matriz_cor[a][b][c];
-				display_byte[1][p][c] = matriz_cor[a][8+b][c];
-				display_byte[2][p][c] = matriz_cor[a][16+b][c];
-				display_byte[3][p][c] = matriz_cor[a][24+b][c];
+				int p = (b*8) + a;
+				//Serial.println(p);
+
+				display_byte[0][c][p] = matriz_cor[a][b][c];
+				display_byte[1][c][p] = matriz_cor[a][8+b][c];
+				display_byte[2][c][p] = matriz_cor[a][16+b][c];
+				display_byte[3][c][p] = matriz_cor[a][24+b][c];
 				}
+				
+	/*Serial.print("display byte");
+	for(a=0; a<=63; a++) {
+		if(a % 8 == 0){
+			Serial.println();
+		}	
+		Serial.print(display_byte[0][0][a]);		
+		Serial.print("	");
+	}
+
+	Serial.println("Matriz final:\n");
+	for(a=0; a<=7; a++) { //filas			
+	   for(b=0;b<=7;b++){ //colunas			 
+			Serial.print(matriz_cor[a][b][0]);				
+	   		Serial.print("	");				   			
+	   }			   
+	   Serial.println();		     
+	}*/		   
 }
 
 void setup()
 {
 	Wire.begin();
+	Wire.setClock(400000);
 	Serial.begin(9600);
+	if(SETCLOCK){
+    	Serial.println("Horas (0 a 24): ");
+        horas = leByte();
+        Serial.println("Minutos (0 a 60): ");
+        minutos = leByte();
+		Serial.println("Segundos (0 a 60): ");
+       	segundos = leByte();
+        Serial.println("Dia da Semana (1 = Domingo a 7 = Sabado): ");
+        diaSemana = leByte();
+        Serial.println("Dia (0 a 31):");
+        diaMes = leByte();
+        Serial.println("Mes (0 a 12):");
+        mes = leByte();
+        Serial.println("Ano (0 a 99):");
+        ano = leByte();
+        write_horas(segundos, minutos, horas, diaSemana, diaMes, mes, ano);
+	}
 }
 
 void loop(){
-
-	rtc_small(rtc_horas(), rtc_min(),rtc_seg(), 255, 255, 255);
+	
+	read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes, &ano);
+	rtc_small(horas, minutos,segundos, 255, 255, 255);
 	dividir_matriz();
-
-	//imprimir horas
-    Serial.print(rtc_horas());
+    Serial.print(horas);
     Serial.print(":");
 
     //imprimir minutos
-    Serial.print(rtc_min());
+    Serial.print(minutos);
     Serial.print(":");
 
     //imprimir segundos
-    Serial.println(rtc_seg());
+    Serial.println(segundos);
 
-	/*Serial.println("Matriz final:\n");
-		for(a=0; a<=7; a++) { //filas
-		   for(b=0;b<=7;b++){ //colunas
-				Serial.print(divido[a][b][0][0]);
-		   		Serial.print("	");	
-		   }
-	      Serial.println();
-	   }*/
-	delay(1000);
+	//delay(1000);
 	update_display(DEST1, 0);
+	//update_display(DEST2, 1);
+	//update_display(DEST3, 2);
+	//update_display(DEST4, 3);*/
 }
