@@ -20,7 +20,7 @@
 #include <Wire.h>                //wire library for I2C
 #include <Colorduino.h>          //colorduino library
 
-#define I2C_DEVICE_ADDRESS 0x64  //I2C address for this device 
+#define I2C_DEVICE_ADDRESS 0x44 //I2C address for this device 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
 //=============HANDLERS======================================
@@ -49,7 +49,30 @@ void setup()
   unsigned char whiteBalVal[3] = {33,63,63}; // for LEDSEE 6x6cm round matrix
   Colorduino.SetWhiteBal(whiteBalVal);
 
+  /*PixelRGB *a = Colorduino.GetPixel(0,0);
+  a->r = 255;
+  a->g = 0;
+  a->b = 0;
+
+  PixelRGB *b = Colorduino.GetPixel(7,7);
+  b->r = 0;
+  b->g = 0;
+  b->b = 255;
+  
+  PixelRGB *c = Colorduino.GetPixel(0,7);
+  c->r = 0;
+  c->g = 255;
+  c->b = 0;
+  
+  PixelRGB *d = Colorduino.GetPixel(7,0);
+  d->r = 0;
+  d->g = 255;
+  d->b = 0;
+
+  Colorduino.FlipPage();*/
+
   Wire.begin(I2C_DEVICE_ADDRESS); // join i2c bus as slave
+  Wire.setClock(400000);
   Wire.onReceive(receiveEvent);   // define the receive function for receiving data from master
 }
 
