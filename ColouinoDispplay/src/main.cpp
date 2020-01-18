@@ -17,14 +17,13 @@
 */
 
 #include <Arduino.h>
-#include <Wire.h>                //wire library for I2C
+#include <WireUNO.h>                //wire library for I2C
 #include <Colorduino.h>          //colorduino library
 
-#define I2C_DEVICE_ADDRESS 0x44 //I2C address for this device 
+#define I2C_DEVICE_ADDRESS 0x60 //I2C address for this device 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
 //=============HANDLERS======================================
-
 //get data from master - HINT: this is a ISR call!
 //HINT2: do not handle stuff here!! this will NOT work
 //collect only data here and process it in the main loop!
@@ -49,7 +48,7 @@ void setup()
   unsigned char whiteBalVal[3] = {33,63,63}; // for LEDSEE 6x6cm round matrix
   Colorduino.SetWhiteBal(whiteBalVal);
 
-  /*PixelRGB *a = Colorduino.GetPixel(0,0);
+  PixelRGB *a = Colorduino.GetPixel(0,0);
   a->r = 255;
   a->g = 0;
   a->b = 0;
@@ -69,10 +68,10 @@ void setup()
   d->g = 255;
   d->b = 0;
 
-  Colorduino.FlipPage();*/
+  Colorduino.FlipPage();
 
   Wire.begin(I2C_DEVICE_ADDRESS); // join i2c bus as slave
-  Wire.setClock(400000);
+  //Wire.setClock(400000);
   Wire.onReceive(receiveEvent);   // define the receive function for receiving data from master
 }
 
