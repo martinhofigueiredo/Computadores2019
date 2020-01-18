@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "Wire.h"
+#include "WirePIC32.h"
 
 #define endereco_RTC  0x68
 #define endereco_Temperatura_MSB  0x11
@@ -23,7 +23,7 @@ void read_horas(byte *segundos, byte *minutos, byte *horas, byte *diaSemana, byt
 {
   Wire.beginTransmission(endereco_RTC);
   Wire.write(0); // muda registo do RTC para 00h
-  Wire.endTransmission();
+  Wire.endTransmission(false);
   Wire.requestFrom(endereco_RTC, 7);
   // 7 bytes de dados a começar no registo 00h
   *segundos = binDec(Wire.read() & 0x7f);
@@ -33,6 +33,7 @@ void read_horas(byte *segundos, byte *minutos, byte *horas, byte *diaSemana, byt
   *diaMes = binDec(Wire.read());
   *mes = binDec(Wire.read());
   *ano = binDec(Wire.read());
+  Wire.endTransmission(false);
 }
 
 //ler a temperatura
@@ -42,7 +43,7 @@ float rtc_temp()
   //MSB
   Wire.beginTransmission(endereco_RTC);
   Wire.write(endereco_Temperatura_MSB);
-  Wire.endTransmission();
+  Wire.endTransmission(false);
 
   Wire.requestFrom(endereco_RTC, 1);
   temp_msb = Wire.read();
@@ -57,7 +58,7 @@ float rtc_temp()
   //LSB
   Wire.beginTransmission(endereco_RTC);
   Wire.write(endereco_Temperatura_LSB);
-  Wire.endTransmission();
+  Wire.endTransmission(false);
   //******debugging******
   /*Serial.print(temp_lsb);
   Serial.print("  /  ");
@@ -90,18 +91,18 @@ byte leByte()
   return reading;
 }  
 // acerta hora e data (desnecessário)***
-void write_horas(byte segundos, byte minutos, byte horas, byte diaSemana, byte diaMes, byte mes, byte ano)
+void write_horas(byte segundo, byte minuto, byte hora, byte diasemana, byte diames, byte mez, byte anu)
 {
   Wire.beginTransmission(endereco_RTC);
   Wire.write(0); // configura de forma ao 1º byte acertar os segundos
-  Wire.write(decBin(segundos)); // acerta segundos
-  Wire.write(decBin(minutos)); // acerta minutos
-  Wire.write(decBin(horas)); // acerta horas
-  Wire.write(decBin(diaSemana)); // acerta diaSemana (1=Domingo, 7=Sabado)
-  Wire.write(decBin(diaMes)); // acerta diaMes (1 a 31)
-  Wire.write(decBin(mes)); // acerta mes
-  Wire.write(decBin(ano)); // acerta ano (0 a 99)
-  Wire.endTransmission();
+  Wire.write(decBin(segundo)); // acerta segundos
+  Wire.write(decBin(minuto)); // acerta minutos
+  Wire.write(decBin(hora)); // acerta horas
+  Wire.write(decBin(diasemana)); // acerta diaSemana (1=Domingo, 7=Sabado)
+  Wire.write(decBin(diames)); // acerta diaMes (1 a 31)
+  Wire.write(decBin(mez)); // acerta mes
+  Wire.write(decBin(anu)); // acerta ano (0 a 99)
+  Wire.endTransmission(false);
 }
 
 /*
@@ -146,7 +147,7 @@ void print_horas()
   {
     case 1:
       Serial.println("Domingo");
-      break;
+      break;s
     case 2:
       Serial.println("Segunda");
       break;

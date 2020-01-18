@@ -1,20 +1,20 @@
 #include "Arduino.h"
 #include "clk_rtc.h"
-#include "Wire.h"
+#include "WirePIC32.h"
 
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
-#define DEST1 0x11          //set destination I2C address (must match firmware in Colorduino module)
-#define DEST2 0x22          //set destination I2C address (must match firmware in Colorduino module)
-#define DEST3 0x33          //set destination I2C address (must match firmware in Colorduino module)
-#define DEST4 0x44          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST1 0x30          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST2 0x40			//set destination I2C address (must match firmware in Colorduino module)
+#define DEST3 0x50          //set destination I2C address (must match firmware in Colorduino module)
+#define DEST4 0x60          //set destination I2C address (must match firmware in Colorduino module)
 #define SCREENSIZEX 8            //num of LEDs accross
 #define SCREENSIZEY 8            //num of LEDs down
-#define SETCLOCK 0
+#define SETCLOCK 1
 
 byte display_byte[4][3][64] = {{0}};        //display array - 64 bytes x 3 colours 
 byte matriz_cor[8][32][3] = {{0}};
-byte segundos = 0, minutos = 0, horas = 0, diaSemana = 0, diaMes = 0, mes = 0, ano = 0;
+byte segundos1 = 0, minutos1 = 0, horas1 = 0, diaSemana1 = 0, diaMes1 = 0, mes1 = 0, ano1 = 0;
 
 int i;
 int j;
@@ -41,13 +41,13 @@ static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
   Wire.write(col);
   Wire.write(disp_data, 64);
   Wire.write(END_OF_DATA);
-  return Wire.endTransmission();
+  return Wire.endTransmission(false);
 }
 
 //send display buffer to display 
 void update_display(byte addr, int n) {   
   BlinkM_sendBuffer(addr, 0, display_byte[n][0]);   
-  BlinkM_sendBuffer(addr, 1, display_byte[n][1]);   
+  BlinkM_sendBuffer(addr, 1, display_byte[n][1]);
   BlinkM_sendBuffer(addr, 2, display_byte[n][2]);
 }
 
@@ -148,8 +148,8 @@ void dividir_matriz( ){
 				display_byte[2][c][p] = matriz_cor[a][16+b][c];
 				display_byte[3][c][p] = matriz_cor[a][24+b][c];
 				}
-				
-	/*Serial.print("display byte");
+	/*
+	Serial.print("display byte");
 	for(a=0; a<=63; a++) {
 		if(a % 8 == 0){
 			Serial.println();
@@ -157,7 +157,6 @@ void dividir_matriz( ){
 		Serial.print(display_byte[0][0][a]);		
 		Serial.print("	");
 	}
-
 	Serial.println("Matriz final:\n");
 	for(a=0; a<=7; a++) { //filas			
 	   for(b=0;b<=7;b++){ //colunas			 
@@ -171,45 +170,43 @@ void dividir_matriz( ){
 void setup()
 {
 	Wire.begin();
-	Wire.setClock(400000);
 	Serial.begin(9600);
 	if(SETCLOCK){
     	Serial.println("Horas (0 a 24): ");
-        horas = leByte();
+        horas1 = leByte();
         Serial.println("Minutos (0 a 60): ");
-        minutos = leByte();
+        minutos1 = leByte();
 		Serial.println("Segundos (0 a 60): ");
-       	segundos = leByte();
+       	segundos1 = leByte();
         Serial.println("Dia da Semana (1 = Domingo a 7 = Sabado): ");
-        diaSemana = leByte();
+        diaSemana1 = leByte();
         Serial.println("Dia (0 a 31):");
-        diaMes = leByte();
+        diaMes1 = leByte();
         Serial.println("Mes (0 a 12):");
-        mes = leByte();
+        mes1 = leByte();
         Serial.println("Ano (0 a 99):");
-        ano = leByte();
-        write_horas(segundos, minutos, horas, diaSemana, diaMes, mes, ano);
+        ano1 = leByte();
+        write_horas(segundos1, minutos1, horas1, diaSemana1, diaMes1, mes1, ano1);
+		Wire.endTransmission(false);
 	}
 }
 
-void loop(){
-	
-	read_horas(&segundos, &minutos, &horas, &diaSemana, &diaMes, &mes, &ano);
-	rtc_small(horas, minutos,segundos, 255, 255, 255);
+
+void loop(){	
+	read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
+	rtc_small(horas1, minutos1, segundos1, 255, 255, 255);
 	dividir_matriz();
-    Serial.print(horas);
-    Serial.print(":");
 
+    Serial.print(horas1);
+    Serial.print(":");
     //imprimir minutos
-    Serial.print(minutos);
+    Serial.print(minutos1);
     Serial.print(":");
-
     //imprimir segundos
-    Serial.println(segundos);
-
-	//delay(1000);
-	update_display(DEST1, 0);
-	//update_display(DEST2, 1);
-	//update_display(DEST3, 2);
-	//update_display(DEST4, 3);*/
+    Serial.println(segundos1);
+	
+	update_display(DEST1, 3);
+	update_display(DEST2, 2);
+	update_display(DEST3, 1);
+	update_display(DEST4, 0);
 }
