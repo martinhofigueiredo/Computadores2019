@@ -2,18 +2,20 @@
 #include "clk_rtc.h"
 #include "WirePIC32.h"
 
+
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
 #define DEST1 0x30          //set destination I2C address (must match firmware in Colorduino module)
 #define DEST2 0x40			//set destination I2C address (must match firmware in Colorduino module)
 #define DEST3 0x50          //set destination I2C address (must match firmware in Colorduino module)
 #define DEST4 0x60          //set destination I2C address (must match firmware in Colorduino module)
-#define SCREENSIZEX 8            //num of LEDs accross
-#define SCREENSIZEY 8            //num of LEDs down
+#define SCREENSIZEX 8           //num of LEDs accross
+#define SCREENSIZEY 32            //num of LEDs down
 
 byte display_byte[4][3][64] = {{0}};        //display array - 64 bytes x 3 colours 
 byte matriz_cor[8][32][3] = {{0}};
 byte segundos1 = 0, minutos1 = 0, horas1 = 0, diaSemana1 = 0, diaMes1 = 0, mes1 = 0, ano1 = 0;
+byte plasma[8][32][3] = {{0}};
 
 int i;
 int j;
@@ -22,6 +24,7 @@ int a;
 int b;
 int c;
 char ch;
+int bri=0;
 
 bool zero[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 1, 1};
 bool um[5][3]= 		{0, 1, 0, 	1, 1, 0, 	0, 1, 0, 	0, 1, 0, 	1, 1, 1};
@@ -68,6 +71,136 @@ bool lz[5][3] =		{1, 1, 1, 	0, 0, 1, 	0, 1, 0, 	1, 0, 0, 	1, 1, 1};
 //icons
 bool tempint[8][5]= {0, 0, 0, 0, 0,	0, 0, 0, 0, 0,	0, 0, 0, 0, 0,	0, 0, 1, 0, 0,	0, 0, 1, 0, 0,	0, 1, 1, 1, 0,	0, 1, 1, 1, 0,	0, 0, 0, 0, 0};
 bool tempext[8][5]= {0, 0, 1, 0, 0,	0, 1, 0, 1, 0,	0, 1, 0, 1, 0,	0, 1, 0, 1, 0,	0, 1, 0, 1, 0,	1, 0, 0, 0, 1,	1, 0, 0, 0, 1,	0, 1, 1, 1, 0};
+bool dot[1]={1};
+
+typedef struct
+{
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
+} ColorRGB;
+
+//a color with 3 components: h, s and v
+typedef struct 
+{
+  unsigned char h;
+  unsigned char s;
+  unsigned char v;
+} ColorHSV;
+
+unsigned char plasma1[SCREENSIZEX][SCREENSIZEY];
+long paletteShift;
+
+void HSVtoRGB(void *vRGB, void *vHSV) 
+{
+  float r, g, b, h, s, v; //this function works with floats between 0 and 1
+  float f, p, q, t;
+  int i;
+  ColorRGB *colorRGB=(ColorRGB *)vRGB;
+  ColorHSV *colorHSV=(ColorHSV *)vHSV;
+
+  h = (float)(colorHSV->h / 256.0);
+  s = (float)(colorHSV->s / 256.0);
+  v = (float)(colorHSV->v / 256.0);
+
+  //if saturation is 0, the color is a shade of grey
+  if(s == 0.0) {
+    b = v;
+    g = b;
+    r = g;
+  }
+  //if saturation > 0, more complex calculations are needed
+  else
+  {
+    h *= 6.0; //to bring hue to a number between 0 and 6, better for the calculations
+    i = (int)(floor(h)); //e.g. 2.7 becomes 2 and 3.01 becomes 3 or 4.9999 becomes 4
+    f = h - i;//the fractional part of h
+
+    p = (float)(v * (1.0 - s));
+    q = (float)(v * (1.0 - (s * f)));
+    t = (float)(v * (1.0 - (s * (1.0 - f))));
+
+    switch(i)
+    {
+      case 0: r=v; g=t; b=p; break;
+      case 1: r=q; g=v; b=p; break;
+      case 2: r=p; g=v; b=t; break;
+      case 3: r=p; g=q; b=v; break;
+      case 4: r=t; g=p; b=v; break;
+      case 5: r=v; g=p; b=q; break;
+      default: r = g = b = 0; break;
+    }
+  }
+  colorRGB->r = (int)(r * 255.0);
+  colorRGB->g = (int)(g * 255.0);
+  colorRGB->b = (int)(b * 255.0);
+}
+
+
+unsigned int RGBtoINT(void *vRGB)
+{
+  ColorRGB *colorRGB=(ColorRGB *)vRGB;
+
+  return (((unsigned int)colorRGB->r)<<16) + (((unsigned int)colorRGB->g)<<8) + (unsigned int)colorRGB->b;
+}
+
+
+float dist(float a, float b, float c, float d) 
+{
+  return sqrt((c-a)*(c-a)+(d-b)*(d-b));
+}
+
+
+void plasma_morph()
+{
+  unsigned char x,y;
+  float value;
+  ColorRGB colorRGB;
+  ColorHSV colorHSV;
+
+  for(x = 0; x <SCREENSIZEX; x++) {
+    for(y = 0; y < SCREENSIZEY; y++)
+      {
+	value = sin(dist(x + paletteShift, y, 128.0, 128.0) / 8.0)
+	  + sin(dist(x, y, 64.0, 64.0) / 8.0)
+	  + sin(dist(x, y + paletteShift / 7, 192.0, 64) / 7.0)
+	  + sin(dist(x, y, 192.0, 100.0) / 8.0);
+	colorHSV.h=(unsigned char)((value) * 128)&0xff;
+	colorHSV.s=255; 
+	colorHSV.v=255;
+	HSVtoRGB(&colorRGB, &colorHSV);
+	
+    for(b=0;b<=31;b++)//colunas
+			for(a=0;a<=7;a++) //cor
+			{
+				plasma[a][b][0]=colorRGB.r;
+                plasma[a][b][1]=colorRGB.g;
+                plasma[a][b][2]=colorRGB.b;	
+			}
+      }
+  }
+  paletteShift++;
+}
+
+ //plasma setup - start with morphing plasma, but allow going to color cycling if desired.
+void plasma_setup()
+{
+   paletteShift=128000;
+  unsigned char bcolor;
+
+  for(unsigned char x = 0; x < SCREENSIZEX; x++)
+    for(unsigned char y = 0; y < SCREENSIZEY; y++)
+    {
+      //the plasma buffer is a sum of sines
+      bcolor = (unsigned char)
+      (
+            128.0 + (128.0 * sin(x*8.0 / 16.0))
+          + 128.0 + (128.0 * sin(y*8.0 / 16.0))
+      ) / 2;
+      plasma1[x][y] = bcolor;
+    }
+}
+
 
 
 //send data via I2C to a client
@@ -165,6 +298,7 @@ void por_num(int num, int x, int y, byte r, byte g, byte b){
 		}
 	}
 }
+
 void limpar(){
 	for (i=0; i<=7; i++) //filas
 		for (j=0; j<=31; j++) //colunas
@@ -195,23 +329,71 @@ void por_temp(){
 //relógio
 void rtc_small(int horas, int min, int seg, int red, int green, int blue){
 
+	//pisca-pisca
+	if(seg%2 == 0){
+	por_num(10, 8, 1, red, green, blue);
+	por_num(10, 18, 1, red, green, blue);
+	}
+	else{
+		limpar();
+	}
+
+	switch(seg/10){
+		case 1:
+			matriz_cor[5][29][1] = (dot[0]) ? 255 : 0;
+		break;
+		case 2:
+			matriz_cor[5][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[4][29][1] = (dot[0]) ? 255 : 0;
+		break;
+		case 3:
+			matriz_cor[5][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[4][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[3][29][1] = (dot[0]) ? 255 : 0;
+		break;
+		case 4:
+			matriz_cor[5][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[4][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[3][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[2][29][1] = (dot[0]) ? 255 : 0;
+		break;
+		case 5:
+			matriz_cor[5][29][1] = (dot[0]) ? 255-bri : 0;
+			matriz_cor[4][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[3][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[2][29][1] = (dot[0]) ? 255 : 0;
+			matriz_cor[1][29][1] = (dot[0]) ? 255 : 0;
+		break;
+		case 0:
+			matriz_cor[5][29][1] = 0;
+			matriz_cor[4][29][1] = 0;
+			matriz_cor[3][29][1] = 0;
+			matriz_cor[2][29][1] = 0;
+			matriz_cor[1][29][1] = 0;
+		break;
+	}
+	
 	//Horas
 	por_num( (horas/10), 1, 1, red, green, blue);
 	por_num( (horas%10), 5, 1, red, green, blue);
-	//dois pontos
-	por_num(10, 8, 1, red, green, blue);
 	//Minutos
 	por_num( (min/10), 11, 1, red, green, blue);
 	por_num( (min%10), 15, 1, red, green, blue);
-	//dois pontos
-	por_num(10, 18, 1, red, green, blue);
 	//Segundos
 	por_num( (seg/10), 21, 1, red, green, blue);
 	por_num( (seg%10), 25, 1, red, green, blue);
 
 }
-
-void dividir_matriz( ){
+void brightness(int bri){
+	for(a=0; a<=7; a++) //filas
+		for(b=0;b<=31;b++)//colunas
+			for(c=0;c<=2;c++) //cor
+			{
+				if(matriz_cor[a][b][c] != 0)
+					matriz_cor[a][b][c]=matriz_cor[a][b][c]-bri;	
+			}
+}
+void dividir_matriz(){
 
 	for(a=0; a<=7; a++) //filas
 		for(b=0;b<=7;b++)//colunas
@@ -248,13 +430,15 @@ void setup()
 {
 	Wire.begin();
 	Serial.begin(9600);
+	plasma_setup();
 }
 
-void loop(){	
+void loop(){
+	plasma_morph();	
 	if(Serial.available()){
 		ch = Serial.read();
 	}
-	
+
 	switch(ch){
 		case 's':{
 			Serial.println("Horas (0 a 24): ");
@@ -295,8 +479,26 @@ void loop(){
 
 			break;
 		}
+		case 'd':{
 
+		}
+		case 'b':{
+			bri=bri-50;
+			ch=NULL;
+			break;
+		}
+		case 'p':{
+			for (int i = 0; i < 8; i++){
+				for (int j = 0; j < 32; j++){
+					matriz_cor[i][j][0]=plasma[i][j][0];
+					matriz_cor[i][j][1]=plasma[i][j][1];
+					matriz_cor[i][j][2]=plasma[i][j][2];
+				}	
+			}
+			break;
+		}
 	}
+	brightness(bri);
 	dividir_matriz();
 	
 	update_display(DEST1, 3);
