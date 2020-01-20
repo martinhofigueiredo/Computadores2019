@@ -2,7 +2,6 @@
 #include "clk_rtc.h"
 #include "WirePIC32.h"
 
-
 #define START_OF_DATA 0x10       //data markers
 #define END_OF_DATA 0x20         //data markers
 #define DEST1 0x30          //set destination I2C address (must match firmware in Colorduino module)
@@ -25,6 +24,7 @@ int b;
 int c;
 char ch;
 int bri=0;
+int p=0;
 
 bool zero[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 1, 1};
 bool um[5][3]= 		{0, 1, 0, 	1, 1, 0, 	0, 1, 0, 	0, 1, 0, 	1, 1, 1};
@@ -42,36 +42,16 @@ bool grau[5][3]=	{1, 1, 0,	1, 1, 0,	0, 0, 0,	0, 0, 0,	0, 0, 0};
 bool celsius2[5][3]=	{1, 1, 1,	1, 0, 0,	1, 0, 0,	1, 0, 0,	1, 1, 1};
 bool fah2[5][3]=		{1, 1, 1,	1, 0, 0,	1, 1, 0,	1, 0, 0,	1, 0, 0};
 bool barra[5][3]= 	{0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0};
-bool la[5][3] =		{0, 1, 1, 	1, 0, 1, 	1, 1, 1, 	1, 0, 1, 	1, 0, 1};
-bool lb[5][3] =		{1, 1, 0, 	1, 0, 1, 	1, 1, 0, 	1, 0, 1, 	1, 1, 1};
-bool lc[5][3] =		{0, 1, 1, 	1, 0, 0, 	1, 0, 0, 	1, 0, 0, 	0, 1, 1};
-bool ld[5][3] =		{1, 1, 0, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 1, 0};
-bool le[5][3] =		{1, 1, 1, 	1, 0, 0, 	1, 1, 0, 	1, 0, 0, 	1, 1, 1};
-bool lf[5][3] =		{1, 1, 1, 	1, 0, 0, 	1, 1, 0, 	1, 0, 0, 	1, 0, 0};
-bool lg[5][3] =		{0, 1, 1, 	1, 0, 0, 	1, 0, 1, 	1, 0, 1, 	0, 1, 1};
-bool lh[5][3] =		{1, 0, 1, 	1, 0, 1, 	1, 1, 1, 	1, 0, 1, 	1, 0, 1};
-bool li[5][1] =		{1, 1, 1, 1, 1};
-bool lj[5][3] =		{0, 0, 1, 	0, 0, 1, 	0, 0, 1, 	1, 0, 1, 	1, 1, 1};
-bool lk[5][3] =		{1, 0, 1, 	1, 0, 1, 	1, 1, 0, 	1, 0, 1, 	1, 0, 1};
-bool ll[5][3] =		{1, 0, 0, 	1, 0, 0, 	1, 0, 0, 	1, 0, 0, 	1, 1, 1};
-bool lm[5][5] =		{1, 0, 0, 0, 1, 	1, 1, 0, 1, 1,  	1, 0, 1, 0, 1,  	1, 0, 0, 0, 1,  	1, 0, 0, 0, 1};
-bool ln[5][4] =		{1, 0, 0, 1, 	1, 1, 0, 1,		1, 0, 1, 1,  	1, 0, 0, 1,  	1, 0, 0, 1};
-bool lo[5][3] =		{0, 1, 0, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	0, 1, 0};
-bool lp[5][3] =		{1, 1, 0, 	1, 0, 1, 	1, 1, 1, 	1, 0, 0, 	1, 0, 0};
-bool lq[5][4] =		{0, 1, 0, 0,	1, 0, 1, 0,		1, 0, 1, 0,		1, 0, 1, 1,		0, 1, 0, 1};
-bool lr[5][3] =		{1, 1, 1, 	1, 0, 1, 	1, 1, 0, 	1, 0, 1, 	1, 0, 1};
-bool ls[5][3] =		{1, 1, 1, 	1, 0, 0, 	1, 1, 1, 	0, 0, 1, 	1, 1, 1};
-bool lt[5][3] =		{1, 1, 1, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0};
-bool lu[5][3] =		{1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 1, 1};
-bool lv[5][3] =		{1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	1, 0, 1, 	0, 1, 0};
-bool lw[5][5] =		{1, 0, 1, 0, 1,		1, 0, 1, 0, 1,		1, 0, 1, 0, 1,		1, 0, 1, 0, 1,		0, 1, 0, 1, 0};
-bool lx[5][3] =		{1, 0, 1, 	1, 0, 1, 	0, 1, 0, 	1, 0, 1, 	1, 0, 1};
-bool ly[5][3] =		{1, 0, 1, 	1, 0, 1, 	1, 1, 1, 	0, 0, 1, 	1, 1, 0};
-bool lz[5][3] =		{1, 1, 1, 	0, 0, 1, 	0, 1, 0, 	1, 0, 0, 	1, 1, 1};
 //icons
 bool tempint[8][5]= {0, 0, 0, 0, 0,	0, 0, 0, 0, 0,	0, 0, 0, 0, 0,	0, 0, 1, 0, 0,	0, 0, 1, 0, 0,	0, 1, 1, 1, 0,	0, 1, 1, 1, 0,	0, 0, 0, 0, 0};
 bool tempext[8][5]= {0, 0, 1, 0, 0,	0, 1, 0, 1, 0,	0, 1, 0, 1, 0,	0, 1, 0, 1, 0,	0, 1, 0, 1, 0,	1, 0, 0, 0, 1,	1, 0, 0, 0, 1,	0, 1, 1, 1, 0};
 bool dot[1]={1};
+//creditos
+bool creditos[5][94]= {1,	0,	0,	0,	1,  0,	0,	1,	1,	0,	1,	1,	1,	0,	1,	1,	1,	0,	1,	0,	1,	0,	0,	1,	0,	1,	0,	1,	0,	1,	1,	1,	0,	0,	1,	1,	1,	0,	0,	1,	1,	0,	0,	1,	1,	1,	0,	1,	1,	0,	0,	1,	1,	1,	0,	1,	1,	1,	0,	0,	0,	0,	1,	0,	0,	0,	1,  0,	0,	1,	1,	0,	1,	1,	1,	0,	1,	1,	1,	0,	1,	0,	1,	0,	0,	1,	0,	1,	0,	1,	0,	1,	1,	1,
+					   	1,	1,	0,	1,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	1,	0,	1,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	0,	0,	1,	0,	1,	0,	1,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	0,	0,	1,	1,	0,	1,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	1,	0,	1,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,
+					   	1,	0,	1,	0,	1,	0,	1,	1,	1,	0,	1,	1,	0,	0,	0,	1,	0,	0,	1,	0,	1,	0,	1,	1,	0,	1,	1,	1,	0,	1,	0,	1,	0,	0,	1,	1,	0,	0,	0,	1,	1,	1,	0,	1,	1,	0,	0,	1,	0,	1,	0,	1,	1,	0,	0,	1,	0,	1,	0,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	1,	1,	0,	1,	1,	0,	0,	0,	1,	0,	0,	1,	0,	1,	0,	1,	1,	0,	1,	1,	1,	0,	1,	0,	1,
+					   	1,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	1,	0,	1,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	0,	0,	1,	0,	0,	0,	1,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	0,	0,	1,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	1,	0,	1,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,
+					   	1,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	1,	0,	1,	0,	0,	1,	0,	1,	0,	1,	0,	1,	1,	1,	0,	0,	1,	1,	1,	0,	0,	1,	0,	0,	0,	1,	1,	1,	0,	1,	1,	0,	0,	1,	0,	1,	0,	1,	1,	1,	0,	0,	0,	0,	1,	0,	0,	0,	1,	0,	1,	0,	1,	0,	1,	0,	1,	0,	0,	1,	0,	0,	1,	0,	1,	0,	0,	1,	0,	1,	0,	1,	0,	1,	1,	1};
 
 typedef struct
 {
@@ -90,7 +70,7 @@ typedef struct b
 
 unsigned char plasma1[SCREENSIZEX][SCREENSIZEY];
 long paletteShift;
-
+//plasma
 void HSVtoRGB(void *vRGB, void *vHSV) 
 {
   float r, g, b, h, s, v; //this function works with floats between 0 and 1
@@ -135,19 +115,19 @@ void HSVtoRGB(void *vRGB, void *vHSV)
   colorRGB->g = (int)(g * 255.0);
   colorRGB->b = (int)(b * 255.0);
 }
-
+//palsma
 unsigned int RGBtoINT(void *vRGB)
 {
   ColorRGB *colorRGB=(ColorRGB *)vRGB;
 
   return (((unsigned int)colorRGB->r)<<16) + (((unsigned int)colorRGB->g)<<8) + (unsigned int)colorRGB->b;
 }
-
+//paslma
 float dist(float a, float b, float c, float d) 
 {
   return sqrt((c-a)*(c-a)+(d-b)*(d-b));
 }
-
+//paslma
 void plasma_morph()
 {
   unsigned char x,y;
@@ -178,8 +158,7 @@ void plasma_morph()
   }
   paletteShift++;
 }
-
- //plasma setup - start with morphing plasma, but allow going to color cycling if desired.
+ //plasma
 void plasma_setup()
 {
    paletteShift=128000;
@@ -215,6 +194,7 @@ void update_display(byte addr, int n) {
   BlinkM_sendBuffer(addr, 2, display_byte[n][2]);
 }
 
+//colocar os numeros
 void por_num(int num, int x, int y, byte r, byte g, byte b){
 	for (i=0; i<=2; i++) //filas
 	for (j=0; j<=4; j++) //colunas
@@ -305,6 +285,7 @@ void por_num(int num, int x, int y, byte r, byte g, byte b){
 	}
 }
 
+//limpar a matriz
 void limpar(){
 	for (i=0; i<=7; i++) //filas
 		for (j=0; j<=31; j++) //colunas
@@ -364,6 +345,7 @@ void por_tempfah(int seg4){
 	por_num( 15, 22, 1, 255, 255, 255); //fah2
 }
 
+//data
 void data(int dia2, int mes2, int ano2){
 
 	por_num( dia2/10, 2, 1, 255, 255, 255);
@@ -376,6 +358,7 @@ void data(int dia2, int mes2, int ano2){
 	por_num( ano2%10, 26, 1, 255, 255, 255);
 }
 
+//relogio com data
 void rtc_big(int horas2, int min2, int seg2, int diames, int red2, int blue2, int green2){
 	//pisca-pisca
 	if(seg2%2 == 0){
@@ -659,7 +642,7 @@ void rtc_big(int horas2, int min2, int seg2, int diames, int red2, int blue2, in
 	}
 }
 
-//relógio
+//relógio com segundos
 void rtc_small(int horas, int min, int seg, int red, int green, int blue){
 
 	//pisca-pisca
@@ -717,6 +700,23 @@ void rtc_small(int horas, int min, int seg, int red, int green, int blue){
 	por_num( (seg%10), 25, 1, red, green, blue);
 
 }
+
+//creditos
+void cre(){
+	limpar();
+	if(p >= 62)
+		p = 0;
+	for (i=0; i<=31; i++) 
+		for (j=0; j<=4; j++)
+		{
+		   	matriz_cor[1+j][i][0] = (creditos[j][i+p]) ? 255 : 0;
+			matriz_cor[1+j][i][1] = (creditos[j][i+p]) ? 255 : 0;
+			matriz_cor[1+j][i][2] = (creditos[j][i+p]) ? 255 : 0;
+		}
+	
+}
+
+//brilho
 void brightness(int bri){
 	for(a=0; a<=7; a++) //filas
 		for(b=0;b<=31;b++)//colunas
@@ -726,6 +726,8 @@ void brightness(int bri){
 					matriz_cor[a][b][c]=matriz_cor[a][b][c]-bri;	
 			}
 }
+
+//dividir a matriz em ecras 
 void dividir_matriz(){
 
 	for(a=0; a<=7; a++) //filas
@@ -767,6 +769,7 @@ void setup()
 }
 
 void loop(){
+	p++;
 	brightness(0);
 	plasma_morph();	
 	if(Serial.available()){
@@ -774,6 +777,7 @@ void loop(){
 	}
 
 	switch(ch){
+		//acertar as horas
 		case 's':{
 			Serial.println("Horas (0 a 24): ");
         	horas1 = leByte();
@@ -794,6 +798,7 @@ void loop(){
 			ch = NULL;
 			break;
 		}
+		//big clock
 		default:{
 			limpar();
 			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
@@ -805,35 +810,41 @@ void loop(){
     		Serial.println(segundos1);
 			break;
 		}
+		//temperatura cel
 		case 't':{
 			limpar();
 			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 			por_temp(segundos1);
 			break;
 		}
+		//temperatura fah
 		case 'f':{
 			limpar();
 			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 			por_tempfah(segundos1);
 			break;
 		}
+		//data
 		case 'd':{
 			limpar();
 			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 			data(diaMes1, mes1, ano1);
 			break;
 		}
+		//small clock
 		case 'r':{
 			limpar();
 			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 			rtc_big(horas1, minutos1, segundos1, diaMes1, 255, 255, 255);
 			break;
 		}
+		//brilho
 		case 'b':{
 			bri=bri-50;
 			ch=NULL;
 			break;
 		}
+		//plasma
 		case 'p':{
 			limpar();
 			for (int i = 0; i < 8; i++){
@@ -843,6 +854,11 @@ void loop(){
 					matriz_cor[i][j][2]=plasma[i][j][2];
 				}	
 			}
+			break;
+		//creditos
+		case 'w':
+			limpar();
+			cre();
 			break;
 		}
 	}
