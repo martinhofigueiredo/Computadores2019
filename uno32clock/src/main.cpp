@@ -38,10 +38,10 @@ bool oito[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	1, 0, 1, 	1, 1, 1};
 bool nove[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	0, 0, 1, 	1, 1, 1};
 bool doispontos[5][3]={0, 0, 0, 	0, 1, 0, 	0, 0, 0, 	0, 1, 0, 	0, 0, 0};
 bool ponto[5][3]=	{0, 0, 0, 	0, 0, 0, 	0, 0, 0, 	0, 0, 0, 	0, 1, 0};
-bool celsius1[5][3]=	{0, 1, 0,	1, 0, 1,	0, 1, 0,	0, 0, 0,	0, 0, 0};
+bool grau[5][3]=	{1, 1, 0,	1, 1, 0,	0, 0, 0,	0, 0, 0,	0, 0, 0};
 bool celsius2[5][3]=	{1, 1, 1,	1, 0, 0,	1, 0, 0,	1, 0, 0,	1, 1, 1};
-bool fah1[5][7]=		{0, 1, 0,	1, 0, 1,	0, 1, 0,	0, 0, 0,	0, 0, 0};
-bool fah2[5][7]=		{1, 1, 1,	1, 0, 0,	1, 1, 0,	1, 0, 0,	1, 0, 0};
+bool fah2[5][3]=		{1, 1, 1,	1, 0, 0,	1, 1, 0,	1, 0, 0,	1, 0, 0};
+bool barra[5][3]= 	{0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0};
 bool la[5][3] =		{0, 1, 1, 	1, 0, 1, 	1, 1, 1, 	1, 0, 1, 	1, 0, 1};
 bool lb[5][3] =		{1, 1, 0, 	1, 0, 1, 	1, 1, 0, 	1, 0, 1, 	1, 1, 1};
 bool lc[5][3] =		{0, 1, 1, 	1, 0, 0, 	1, 0, 0, 	1, 0, 0, 	0, 1, 1};
@@ -81,7 +81,7 @@ typedef struct
 } ColorRGB;
 
 //a color with 3 components: h, s and v
-typedef struct 
+typedef struct b
 {
   unsigned char h;
   unsigned char s;
@@ -136,7 +136,6 @@ void HSVtoRGB(void *vRGB, void *vHSV)
   colorRGB->b = (int)(b * 255.0);
 }
 
-
 unsigned int RGBtoINT(void *vRGB)
 {
   ColorRGB *colorRGB=(ColorRGB *)vRGB;
@@ -144,12 +143,10 @@ unsigned int RGBtoINT(void *vRGB)
   return (((unsigned int)colorRGB->r)<<16) + (((unsigned int)colorRGB->g)<<8) + (unsigned int)colorRGB->b;
 }
 
-
 float dist(float a, float b, float c, float d) 
 {
   return sqrt((c-a)*(c-a)+(d-b)*(d-b));
 }
-
 
 void plasma_morph()
 {
@@ -200,8 +197,6 @@ void plasma_setup()
       plasma1[x][y] = bcolor;
     }
 }
-
-
 
 //send data via I2C to a client
 static byte BlinkM_sendBuffer(byte addr, byte col, byte* disp_data) {
@@ -286,15 +281,26 @@ void por_num(int num, int x, int y, byte r, byte g, byte b){
 			matriz_cor[y+j][x+i][2] = (ponto[j][i]) ? b : 0;
 		   break;
 		case 12:
-			matriz_cor[y+j][x+i][0] = (celsius1[j][i]) ? r : 0;
-			matriz_cor[y+j][x+i][1] = (celsius1[j][i]) ? g : 0;
-			matriz_cor[y+j][x+i][2] = (celsius1[j][i]) ? b : 0;
+			matriz_cor[y+j][x+i][0] = (grau[j][i]) ? r : 0;
+			matriz_cor[y+j][x+i][1] = (grau[j][i]) ? g : 0;
+			matriz_cor[y+j][x+i][2] = (grau[j][i]) ? b : 0;
 		   break;
 		case 13:
 			matriz_cor[y+j][x+i][0] = (celsius2[j][i]) ? r : 0;
 			matriz_cor[y+j][x+i][1] = (celsius2[j][i]) ? g : 0;
 			matriz_cor[y+j][x+i][2] = (celsius2[j][i]) ? b : 0;
 		   break;
+		case 14:
+			matriz_cor[y+j][x+i][0] = (barra[j][i]) ? r : 0;
+			matriz_cor[y+j][x+i][1] = (barra[j][i]) ? g : 0;
+			matriz_cor[y+j][x+i][2] = (barra[j][i]) ? b : 0;
+		break;
+		case 15:
+			matriz_cor[y+j][x+i][0] = (fah2[j][i]) ? r : 0;
+			matriz_cor[y+j][x+i][1] = (fah2[j][i]) ? g : 0;
+			matriz_cor[y+j][x+i][2] = (fah2[j][i]) ? b : 0;
+		break;
+
 		}
 	}
 }
@@ -307,16 +313,8 @@ void limpar(){
 
 }
 
-//temperatura
-void por_temp(){
-	int temp = rtc_temp()*100;
-	por_num( (temp/1000), 1, 1, 255, 255, 255); //dezenas
-	por_num( ((temp/100)%10) , 5, 1, 255, 255, 255); //unidades
-	por_num(11, 8, 1, 255, 255, 255);	//ponto
-	por_num( ((temp/10)%10) , 11, 1, 255, 255, 255); //decimal dezenas
-	por_num( (temp%10) , 15, 1, 255, 255, 255); //decimal unidades
-	por_num( 12, 19, 1, 255, 255, 255); //celsius1
-	por_num( 13, 23, 1, 255, 255, 255); //celsius2
+//temperatura celsius
+void por_temp(int seg3){
 
 	for (i=0; i<=4; i++)
 		for (j=0; j<=7; j++){
@@ -324,6 +322,341 @@ void por_temp(){
 			matriz_cor[j][27+i][1] = ( (tempext[j][i]) ? 255 : 0);
 			matriz_cor[j][27+i][2] = ( (tempext[j][i]) ? 255 : 0);
 		}
+	//pisca-pisca
+	if(seg3%2 == 0)
+		matriz_cor[2][29][0]=( (tempext[0][2]) ? 255 : 0);
+	else
+		matriz_cor[2][29][0]=( (tempext[0][2]) ? 0 : 255);
+	
+	int temp = rtc_temp()*100;
+	por_num( (temp/1000), 1, 1, 255, 255, 255); //dezenas
+	por_num( ((temp/100)%10) , 5, 1, 255, 255, 255); //unidades
+	por_num(11, 8, 1, 255, 255, 255);	//ponto
+	por_num( ((temp/10)%10) , 11, 1, 255, 255, 255); //decimal dezenas
+	por_num( (temp%10) , 15, 1, 255, 255, 255); //decimal unidades
+	por_num( 12, 19, 1, 255, 255, 255); //celsius1
+	por_num( 13, 22, 1, 255, 255, 255); //celsius2
+
+}
+
+//temperatura fah
+void por_tempfah(int seg4){
+
+	for (i=0; i<=4; i++)
+		for (j=0; j<=7; j++){
+			matriz_cor[j][27+i][0] = ( (tempext[j][i]) ? 255 : 0)+ ( (tempint[j][i]) ? 255 : 0);
+			matriz_cor[j][27+i][1] = ( (tempext[j][i]) ? 255 : 0);
+			matriz_cor[j][27+i][2] = ( (tempext[j][i]) ? 255 : 0);
+		}
+	//pisca-pisca
+	if(seg4%2 == 0)
+		matriz_cor[2][29][0]=( (tempext[0][2]) ? 255 : 0);
+	else
+		matriz_cor[2][29][0]=( (tempext[0][2]) ? 0 : 255);
+
+	int temp1 = (rtc_temp()*(float)(9/5)+32)*100;
+	por_num( (temp1/1000), 1, 1, 255, 255, 255); //dezenas
+	por_num( ((temp1/100)%10) , 5, 1, 255, 255, 255); //unidades
+	por_num(11, 8, 1, 255, 255, 255);	//ponto
+	por_num( ((temp1/10)%10) , 11, 1, 255, 255, 255); //decimal dezenas
+	por_num( (temp1%10) , 15, 1, 255, 255, 255); //decimal unidades
+	por_num( 12, 19, 1, 255, 255, 255); //celsius1
+	por_num( 15, 22, 1, 255, 255, 255); //fah2
+}
+
+void data(int dia2, int mes2, int ano2){
+
+	por_num( dia2/10, 2, 1, 255, 255, 255);
+	por_num( dia2%10, 6, 1, 255, 255, 255);
+	por_num( 14, 9, 1, 255, 255, 255);	
+	por_num( mes2/10, 12, 1, 255, 255, 255);
+	por_num( mes2%10, 16, 1, 255, 255, 255);
+	por_num( 14, 19, 1, 255, 255, 255);
+	por_num( ano2/10, 22, 1, 255, 255, 255);
+	por_num( ano2%10, 26, 1, 255, 255, 255);
+}
+
+void rtc_big(int horas2, int min2, int seg2, int diames, int red2, int blue2, int green2){
+	//pisca-pisca
+	if(seg2%2 == 0){
+	por_num(10, 19, 1, red2, green2, blue2);
+	}
+	else{
+		limpar();
+	}
+	//Horas
+	por_num( (horas2/10), 12, 1, red2, green2, blue2);
+	por_num( (horas2%10), 16, 1, red2, green2, blue2);
+	//Minutos
+	por_num( (min2/10), 22, 1, red2, green2, blue2);
+	por_num( (min2%10), 26, 1, red2, green2, blue2);
+
+	//data
+	for (i=0; i<=5; i++) //filas
+		for (j=0; j<=8; j++){ //colunas
+				matriz_cor[2+i][j][0]=dot[0];
+				matriz_cor[2+i][j][1]=dot[0];
+				matriz_cor[2+i][j][2]=dot[0];
+		}
+
+	for (i=0; i<=1; i++) //filas
+		for (j=0; j<=8; j++) //colunas
+			matriz_cor[i][j][0]=dot[0];
+
+	for (i=0; i<=2; i++) //filas
+	for (j=0; j<=4; j++){ //colunas
+		//NAO ABRIR MUITO LONGO
+		switch (diames){
+			case 1:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 2:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 3:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 4:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 5:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 6:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 7:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 8:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 9:
+				matriz_cor[2+j][1+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 10:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 11:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 12:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 13:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 14:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 15:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 16:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 17:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 18:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 19:
+				matriz_cor[2+j][1+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 20:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 21:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 22:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 23:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (tres[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 24:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (quatro[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 25:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (cinco[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 26:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (seis[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 27:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (sete[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 28:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (oito[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 29:
+				matriz_cor[2+j][1+i][0] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (dois[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (nove[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 30:
+				matriz_cor[2+j][1+i][0] = (tres[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (tres[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (tres[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (zero[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+			case 31:
+				matriz_cor[2+j][1+i][0] = (tres[j][i]) ? 0 : matriz_cor[2+j][1+i][0];
+				matriz_cor[2+j][1+i][1] = (tres[j][i]) ? 0 : matriz_cor[2+j][1+i][1];
+				matriz_cor[2+j][1+i][2] = (tres[j][i]) ? 0 : matriz_cor[2+j][1+i][2];
+				matriz_cor[2+j][5+i][0] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][0];
+				matriz_cor[2+j][5+i][1] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][1];
+				matriz_cor[2+j][5+i][2] = (um[j][i]) ? 0 : matriz_cor[2+j][5+i][2];
+				break;
+		}	
+	}
 }
 
 //relógio
@@ -434,6 +767,7 @@ void setup()
 }
 
 void loop(){
+	brightness(0);
 	plasma_morph();	
 	if(Serial.available()){
 		ch = Serial.read();
@@ -461,6 +795,7 @@ void loop(){
 			break;
 		}
 		default:{
+			limpar();
 			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 			rtc_small(horas1, minutos1, segundos1, 255, 255, 255);
 			Serial.print(horas1);
@@ -471,16 +806,28 @@ void loop(){
 			break;
 		}
 		case 't':{
-			por_temp();
-			Serial.println("temperatura");
+			limpar();
+			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
+			por_temp(segundos1);
 			break;
 		}
 		case 'f':{
-
+			limpar();
+			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
+			por_tempfah(segundos1);
 			break;
 		}
 		case 'd':{
-
+			limpar();
+			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
+			data(diaMes1, mes1, ano1);
+			break;
+		}
+		case 'r':{
+			limpar();
+			read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
+			rtc_big(horas1, minutos1, segundos1, diaMes1, 255, 255, 255);
+			break;
 		}
 		case 'b':{
 			bri=bri-50;
@@ -488,6 +835,7 @@ void loop(){
 			break;
 		}
 		case 'p':{
+			limpar();
 			for (int i = 0; i < 8; i++){
 				for (int j = 0; j < 32; j++){
 					matriz_cor[i][j][0]=plasma[i][j][0];
@@ -498,6 +846,7 @@ void loop(){
 			break;
 		}
 	}
+
 	brightness(bri);
 	dividir_matriz();
 	
