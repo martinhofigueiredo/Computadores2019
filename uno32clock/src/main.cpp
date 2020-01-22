@@ -869,6 +869,8 @@ void loop(){
 	brightness(bri);
 	dividir_matriz();
 	
+
+
 	update_display(DEST1, 3);
 	update_display(DEST2, 2);
 	update_display(DEST3, 1);
