@@ -193,6 +193,7 @@ void setup()
 
 
 void loop(){	
+	
 	read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 	rtc_small(horas1, minutos1, segundos1, 255, 255, 255);
 	dividir_matriz();
@@ -205,6 +206,8 @@ void loop(){
     //imprimir segundos
     Serial.println(segundos1);
 	
+
+
 	update_display(DEST1, 3);
 	update_display(DEST2, 2);
 	update_display(DEST3, 1);
