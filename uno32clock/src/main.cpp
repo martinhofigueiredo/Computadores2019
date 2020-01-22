@@ -39,8 +39,8 @@ bool nove[5][3]= 	{1, 1, 1, 	1, 0, 1, 	1, 1, 1, 	0, 0, 1, 	1, 1, 1};
 bool doispontos[5][3]={0, 0, 0, 	0, 1, 0, 	0, 0, 0, 	0, 1, 0, 	0, 0, 0};
 bool ponto[5][3]=	{0, 0, 0, 	0, 0, 0, 	0, 0, 0, 	0, 0, 0, 	0, 1, 0};
 bool grau[5][3]=	{1, 1, 0,	1, 1, 0,	0, 0, 0,	0, 0, 0,	0, 0, 0};
-bool celsius2[5][3]=	{1, 1, 1,	1, 0, 0,	1, 0, 0,	1, 0, 0,	1, 1, 1};
-bool fah2[5][3]=		{1, 1, 1,	1, 0, 0,	1, 1, 0,	1, 0, 0,	1, 0, 0};
+bool celsius2[5][3]={1, 1, 1,	1, 0, 0,	1, 0, 0,	1, 0, 0,	1, 1, 1};
+bool fah2[5][3]=	{1, 1, 1,	1, 0, 0,	1, 1, 0,	1, 0, 0,	1, 0, 0};
 bool barra[5][3]= 	{0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0, 	0, 1, 0};
 //icons
 bool tempint[8][5]= {0, 0, 0, 0, 0,	0, 0, 0, 0, 0,	0, 0, 0, 0, 0,	0, 0, 1, 0, 0,	0, 0, 1, 0, 0,	0, 1, 1, 1, 0,	0, 1, 1, 1, 0,	0, 0, 0, 0, 0};
@@ -771,27 +771,30 @@ void setup()
 void loop(){
 	p++;
 	brightness(0);
-	plasma_morph();	
+	plasma_morph();
+	read_horas(&segundos1, &minutos1, &horas1, &diaSemana1, &diaMes1, &mes1, &ano1);
 	if(Serial.available()){
 		ch = Serial.read();
 	}
-
 	switch(ch){
 		//acertar as horas
 		case 's':{
-			Serial.println("Horas (0 a 24): ");
+			//Serial.println("Horas (0 a 24): ");
         	horas1 = leByte();
-        	Serial.println("Minutos (0 a 60): ");
+        	//Serial.println("Minutos (0 a 60): ");
         	minutos1 = leByte();
-			Serial.println("Segundos (0 a 60): ");
-       		segundos1 = leByte();
-        	Serial.println("Dia da Semana (1 = Domingo a 7 = Sabado): ");
-        	diaSemana1 = leByte();
-        	Serial.println("Dia (0 a 31):");
+			//Serial.println("Segundos (0 a 60): ");
+        	write_horas(segundos1, minutos1, horas1, diaSemana1, diaMes1, mes1, ano1);
+			Wire.endTransmission(false);
+			ch = NULL;
+			break;
+		}
+		case 'h':{
+			//Serial.println("Dia (0 a 31):");
         	diaMes1 = leByte();
-        	Serial.println("Mes (0 a 12):");
+        	//Serial.println("Mes (0 a 12):");
        		mes1 = leByte();
-        	Serial.println("Ano (0 a 99):");
+        	//Serial.println("Ano (0 a 99):");
         	ano1 = leByte();
         	write_horas(segundos1, minutos1, horas1, diaSemana1, diaMes1, mes1, ano1);
 			Wire.endTransmission(false);
